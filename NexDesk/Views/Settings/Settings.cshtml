@@ -1,0 +1,332 @@
+﻿@{
+    Layout = null;
+    // ViewData["Title"] = "Adgangskode";
+}
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, user-scalable=yes" />
+    <link rel="stylesheet" href="~/css/settings.css" />
+    <script src="~/js/tooltip.js"></script>
+    <script>
+            const apiBase = '@ViewData["ApiBaseUrl"]';
+    </script>
+</head>
+<body>
+    <div style="width: 100%; max-width: 1200px; box-sizing: border-box;">
+        @* ── Left Panel: Setting Buttons ── *@
+        <div style="position: sticky;
+            top: 1rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            border: 1px solid #243251;
+            border-radius: 10px;
+            margin: 20px;
+            margin-bottom: 2rem;
+            padding: 1rem;
+            background: #111a2e;
+            z-index: 100;
+            align-items: center;
+            align-content: flex-start;
+            justify-content: center;">
+            <button class="setting-btn active" data-tooltip="btn-sendResetLink" onclick="showPanel('password', this)">🔒 Adgangskode</button>
+
+            @if (User.FindFirst("PermissionLevel")?.Value == "3")
+            {
+                <button class="setting-btn" data-tooltip="btn-newRole" onclick="showPanel('roles', this)">👥 Roller</button>
+                <button class="setting-btn" data-tooltip="btn-newUser" onclick="showPanel('users', this)">👤 Brugere</button>
+                <button class="setting-btn" data-tooltip="btn-newCategory" onclick="showPanel('categories', this)">🏷️ Kategorier</button>
+                <button class="setting-btn" data-tooltip="btn-newDepartment" onclick="showPanel('departments', this)">🏢 Afdelinger</button>
+            }
+        </div>
+        @* ── Right Panel ── *@
+        <div style="min-height: auto;">
+            @*-------------- Send link to edit password ----------------------------------*@
+            <div id="panel-password" class="setting-panel active">
+                <div class="password-card">
+                    <div class="password-header">
+                        <h1 data-tooltip="settings-password">Adgangskode</h1>
+                        <p>Få tilsendt et link til at nulstille din adgangskode</p>
+                    </div>
+                    <div class="password-body">
+                        <div class="info-box">
+                            <i class="fa-solid fa-circle-info"></i>
+                            <div class="info-text">
+                                <strong>Sådan fungerer det</strong>
+                                Vi sender et link til din email. Linket indeholder en 6-cifret kode, som du skal bruge til at nulstille din adgangskode.
+                            </div>
+                        </div>
+                    </div>
+                    <form asp-controller="Settings" asp-action="SendResetLink" method="post">
+                        @Html.AntiForgeryToken()
+                        <button type="submit" class="btn-primary">
+                            <i class="fa-solid fa-envelope"></i>
+                            Send link til nulstilling
+                        </button>
+                    </form>
+
+                    @if (TempData["Ok"] != null)
+                    {
+                        <script>
+                                                document.addEventListener('DOMContentLoaded', () => {
+                                                    parent.showToast('@TempData["Ok"]', 'success');
+                                                });
+                        </script>
+                    }
+
+                    @if (TempData["Err"] != null)
+                    {
+                        <script>
+                                                document.addEventListener('DOMContentLoaded', () => {
+                                                    parent.showToast('@TempData["Err"]', 'error');
+                                                });
+                        </script>
+                    }
+
+                    <div class="security-note">
+                        <i class="fa-solid fa-shield-halved"></i>
+                        <span>Linket udløber efter 10 minutter</span>
+                    </div>
+                </div>
+                   
+            </div>
+
+
+            @* ─---------------------─ Admin only panels ------------------------------── *@
+            @* ---------------------- Role placeholder CRUD ---------------------------------- *@
+            <div id="panel-roles" class="setting-panel">
+                <div class="password-card" style="max-width:700px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h2 style="margin:0;">Roller</h2>
+                        <button class="btn-primary" data-tooltip="btn-newRole" style="width:auto; padding:0.5rem 1rem;" onclick="showRoleForm()">+ Ny Rolle</button>
+                    </div>
+
+                    @* Create/Edit Form *@
+                    <div id="roleForm" style="display:none; margin-bottom:1.5rem;">
+                        <div class="info-box">
+                            <input id="roleId" type="hidden" />
+                            <div style="margin-bottom:0.75rem;">
+                                <label style="color:#9fb0d0; font-size:0.85rem;">Navn</label>
+                                <input id="roleName" class="input" data-tooltip="btn-editRole" placeholder="Rolle navn" style="width:100%; margin-top:0.25rem;" />
+                            </div>
+                            <div style="margin-bottom:0.75rem;">
+                                <label style="color:#9fb0d0; font-size:0.85rem;">Adgangsniveau (1=Bruger, 2=Support, 3=Admin)</label>
+                                <input id="rolePermissionLevel" class="input" type="number" min="1" max="3" placeholder="1" style="width:100%; margin-top:0.25rem;" />
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn-primary" style="width:auto;" onclick="saveRole()">Gem</button>
+                                <button onclick="cancelRoleForm()" style="background:transparent; border:1px solid #243251; color:#9fb0d0; padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Annuller</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    @* Roles Table *@
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="color:#9fb0d0; font-size:0.85rem; border-bottom:1px solid #243251;">
+                                <th style="text-align:left; padding:0.5rem;">ID</th>
+                                <th style="text-align:left; padding:0.5rem;">Navn</th>
+                                <th style="text-align:left; padding:0.5rem;">Niveau</th>
+                                <th style="text-align:right; padding:0.5rem;">Handlinger</th>
+                            </tr>
+                        </thead>
+                        <tbody id="rolesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            @* ---------------------- User placeholder CRUD ---------------------------------- *@
+            <div id="panel-users" class="setting-panel">
+                <div class="password-card" style="max-width:900px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h2 style="margin:0;">Brugere</h2>
+                        <button class="btn-primary" data-tooltip="btn-newUser" style="width:auto; padding:0.5rem 1rem;" onclick="showUserForm()">+ Ny Bruger</button>
+                    </div>
+
+                    @* Create/Edit Form *@
+                    <div id="userForm" style="display:none; margin-bottom:1.5rem;">
+                        <div class="info-box">
+                            <input id="userId" type="hidden" />
+                            <div style="display:grid; grid-template-columns:1fr 1fr; gap:0.75rem;">
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Fornavn</label>
+                                    <input id="uFirstName" class="input" placeholder="Fornavn" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Efternavn</label>
+                                    <input id="uLastName" class="input" placeholder="Efternavn" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Brugernavn</label>
+                                    <input id="uUserName" class="input" placeholder="Brugernavn" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Email</label>
+                                    <input id="uEmail" class="input" placeholder="Email" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Telefon</label>
+                                    <input id="uPhone" class="input" placeholder="Telefon" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+       
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Rolle</label>
+                                    <select id="uRoleId" class="input" style="width:100%; margin-top:0.25rem;"></select>
+                                </div>
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Adgangskode (blank = ingen ændring)</label>
+                                    <input id="uPassword" class="input" type="password" placeholder="Adgangskode" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                                <div id="uRfidField" style="display:none;">
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">RFID</label>
+                                    <input id="uRfid" class="input" placeholder="RFID" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                                <div>
+                                    <label style="color:#9fb0d0; font-size:0.85rem;">Session timeout (minutter) — blank = standard</label>
+                                    <input id="uSessionTimeout" class="input" type="number" min="1" placeholder="Standard" style="width:100%; margin-top:0.25rem;" />
+                                </div>
+                            </div>
+                            <div style="display:flex; gap:0.5rem; margin-top:1rem;">
+                                <button class="btn-primary" style="width:auto;" onclick="saveUser()">Gem</button>
+                                <button onclick="cancelUserForm()" style="background:transparent; border:1px solid #243251; color:#9fb0d0; padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Annuller</button>
+                            </div>
+                        </div>
+                    </div>
+                    @* Search and Filter toolbar *@
+                    <div style="display:flex; gap:0.75rem; margin-bottom:1rem; flex-wrap:wrap;">
+                        <input id="userSearch" class="input" data-tooltip="input-search-user" placeholder="Søg navn, brugernavn eller email..."
+                               style="flex:1; min-width:200px;" oninput="filterUsers()" />
+                        <select id="userRoleFilter" class="input" data-tooltip="filter-role" style="width:150px;" onchange="filterUsers()">
+                            <option value="">Alle roller</option>
+                        </select>
+                    </div>
+                    @* Users Table *@
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="color:#9fb0d0; font-size:0.85rem; border-bottom:1px solid #243251;">
+                                <th style="text-align:left; padding:0.5rem;">ID</th>
+                                <th style="text-align:left; padding:0.5rem;">Navn</th>
+                                <th style="text-align:left; padding:0.5rem;">Brugernavn</th>
+                                <th style="text-align:left; padding:0.5rem;">Email</th>
+                                <th style="text-align:left; padding:0.5rem;">Rolle</th>
+                                <th style="text-align:right; padding:0.5rem;">Handlinger</th>
+                            </tr>
+                        </thead>
+                        <tbody id="usersTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            @* ---------------------- TicketCategory Populate CRUD ------------------------- *@
+            <div id="panel-categories" class="setting-panel">
+                <div class="password-card" style="max-width:700px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h2 style="margin:0;">Kategorier</h2>
+                        <button class="btn-primary" data-tooltip="btn-newCategory" style="width:auto; padding:0.5rem 1rem;" onclick="showCategoryForm()">+ Ny Kategori</button>
+                    </div>
+
+                    <div id="categoryForm" style="display:none; margin-bottom:1.5rem;">
+                        <div class="info-box">
+                            <input id="categoryId" type="hidden" />
+                            <div style="margin-bottom:0.75rem;">
+                                <label style="color:#9fb0d0; font-size:0.85rem;">Navn</label>
+                                <input id="categoryName" class="input" placeholder="Kategori navn" style="width:100%; margin-top:0.25rem;" />
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn-primary" style="width:auto;" onclick="saveCategory()">Gem</button>
+                                <button onclick="cancelCategoryForm()" style="background:transparent; border:1px solid #243251; color:#9fb0d0; padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Annuller</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="color:#9fb0d0; font-size:0.85rem; border-bottom:1px solid #243251;">
+                                <th style="text-align:left; padding:0.5rem;">ID</th>
+                                <th style="text-align:left; padding:0.5rem;">Navn</th>
+                                <th style="text-align:right; padding:0.5rem;">Handlinger</th>
+                            </tr>
+                        </thead>
+                        <tbody id="categoriesTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            @* ---------------------- TicketCDeparement Populate CRUD -------------------------- *@
+            <div id="panel-departments" class="setting-panel">
+                <div class="password-card" style="max-width:700px;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem;">
+                        <h2 style="margin:0;">Afdelinger</h2>
+                        <button class="btn-primary" data-tooltip="btn-newDepartment" style="width:auto; padding:0.5rem 1rem;" onclick="showDepartmentForm()">+ Ny Afdeling</button>
+                    </div>
+
+                    <div id="departmentForm" style="display:none; margin-bottom:1.5rem;">
+                        <div class="info-box">
+                            <input id="departmentId" type="hidden" />
+                            <div style="margin-bottom:0.75rem;">
+                                <label style="color:#9fb0d0; font-size:0.85rem;">Navn</label>
+                                <input id="departmentName" class="input" placeholder="Afdeling navn" style="width:100%; margin-top:0.25rem;" />
+                            </div>
+                            <div style="display:flex; gap:0.5rem;">
+                                <button class="btn-primary" style="width:auto;" onclick="saveDepartment()">Gem</button>
+                                <button onclick="cancelDepartmentForm()" style="background:transparent; border:1px solid #243251; color:#9fb0d0; padding:0.5rem 1rem; border-radius:8px; cursor:pointer;">Annuller</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <table style="width:100%; border-collapse:collapse;">
+                        <thead>
+                            <tr style="color:#9fb0d0; font-size:0.85rem; border-bottom:1px solid #243251;">
+                                <th style="text-align:left; padding:0.5rem;">ID</th>
+                                <th style="text-align:left; padding:0.5rem;">Navn</th>
+                                <th style="text-align:right; padding:0.5rem;">Handlinger</th>
+                            </tr>
+                        </thead>
+                        <tbody id="departmentsTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+
+    </div>
+
+    <script src="~/js/role.js"></script>
+    <script src="~/js/user.js"></script>
+    <script src="~/js/ticketCategory.js"></script>
+    <script src="~/js/ticketDepartment.js"></script>
+
+    <script>
+             // Temporarily edit showPanel in console:
+            function showPanel(name, btn) {
+                document.querySelectorAll('.setting-panel').forEach(p => p.classList.remove('active'));
+                document.querySelectorAll('.setting-btn').forEach(b => b.classList.remove('active'));
+                document.getElementById('panel-' + name).classList.add('active');
+                btn.classList.add('active');
+                console.log('Switching to panel:', name);
+
+                // Load  render  that  use  Iframe  from Settings
+                if (name === 'roles') { console.log('calling loadRoles'); loadRoles(); }
+                if (name === 'users') loadUsers();
+                if (name === 'categories') loadCategories();
+                if (name === 'departments') loadDepartments();
+                
+                if (btn.dataset.view === 'workload') renderWorkload();
+
+
+                // Update URL for settings sub-panels
+                const subUrlMap = {
+                    password: '/Settings/Adgangskode',
+                    roles: '/Settings/Roller',
+                    users: '/Settings/Brugere',
+                    categories: '/Settings/Kategorier',
+                    departments: '/Settings/Afdelinger'
+                };
+                parent.history.pushState(null, '', subUrlMap[name] ?? '/Settings');
+                parent.document.title = 'NexDesk - ' + btn.textContent.trim();
+            }
+    </script>
+</body>
+</html>

@@ -1,0 +1,86 @@
+﻿<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - NexDesk.Webform</title>
+    <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
+    <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
+    <link rel="stylesheet" href="~/NexDesk.Webform.styles.css" asp-append-version="true" />
+    <link rel="icon" href="/favicon.ico" />
+    @await RenderSectionAsync("Styles", required: false)
+</head>
+<body class="app-layout app-body">
+    <header>
+        <nav class="navbar navbar-expand-sm navbar-toggleable-sm app-nav border-0 mb-0">
+            <div class="container-fluid app-nav-inner px-3">
+                <a class="navbar-brand app-brand d-flex align-items-center me-auto" asp-area="" asp-controller="Home" asp-action="Index" aria-label="NexDesk">
+                    <img src="~/img/nexdesk_logo_nobg.png" alt="NexDesk" class="brand-logo" />
+                </a>
+
+                <div class="d-flex align-items-center">
+                    <ul class="navbar-nav me-2">
+                        @if (User.Identity?.IsAuthenticated == true)
+                        {
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle app-nav-link d-inline-flex align-items-center" href="#" id="navbarDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <div class="user-avatar">
+                                        @(User.Identity.Name?[0].ToString().ToUpper() ?? "?")
+                                    </div>
+                                    <span class="ms-2 d-none d-sm-inline">@User.Identity.Name</span>
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end app-dropdown-menu shadow-lg" aria-labelledby="navbarDropdown">
+                                    <li>
+                                        <form asp-controller="Login" asp-action="Logout" method="post" class="d-inline p-0 m-0">
+                                            @Html.AntiForgeryToken()
+                                            <button type="submit" class="dropdown-item app-dropdown-item w-100 text-start border-0 bg-transparent">
+                                                Logout
+                                            </button>
+                                        </form>
+                                    </li>
+                                </ul>
+                            </li>
+                        }
+                        else
+                        {
+                            <li class="nav-item">
+                                <a class="nav-link app-nav-link" asp-controller="Login" asp-action="Index">Login</a>
+                            </li>
+                        }
+                    </ul>
+
+                    <button class="navbar-toggler ms-2" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
+                            aria-expanded="false" aria-label="Toggle navigation">
+                        <span class="navbar-toggler-icon"></span>
+                    </button>
+                </div>
+
+                <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+                    @{
+                        var currentController = ViewContext.RouteData.Values["Controller"]?.ToString();
+                    }
+                    <ul class="navbar-nav flex-grow-1">
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link @(currentController == "Home" ? "active" : "")" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                        </li>
+                        <li class="nav-item">
+                            <a class="nav-link app-nav-link @(currentController == "HistoryBruger" ? "active" : "")" asp-controller="HistoryBruger" asp-action="Index">history</a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+    </header>
+    <div class="container app-content">
+        <main role="main">
+            @RenderBody()
+        </main>
+    </div>
+
+    <script src="~/lib/jquery/dist/jquery.min.js"></script>
+    <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="~/js/site.js" asp-append-version="true"></script>
+    @await RenderSectionAsync("Scripts", required: false)
+</body>
+</html>

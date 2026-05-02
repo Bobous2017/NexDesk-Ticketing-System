@@ -1,0 +1,323 @@
+﻿@{
+    ViewData["Title"] = "NexDesk";
+}
+
+@section Styles {
+    <link rel="stylesheet" href="~/css/home-index.css?v=@DateTime.Now.Ticks" />
+}
+
+<div class="webform-home">
+    <div class="shell">
+        <section class="card">
+            <div class="card-head">
+                <h2>HelpDesk – Form</h2>
+                <p>
+                    Please fill out the fields below.
+                    Fields marked with <span class="required">*</span> are required.
+                </p>
+            </div>
+
+            <form id="ticketForm" method="post">
+                @Html.AntiForgeryToken()
+
+                <div class="grid">
+                    <div class="field field-full">
+                        <label for="ticketTemplate">Ticket template</label>
+                        <select id="ticketTemplate" name="ticketTemplate">
+                            <option value="" selected>Select template...</option>
+                            <option value="outlook-send-mail">Outlook can't send mail</option>
+                            <option value="vpn-cannot-connect">VPN cannot connect</option>
+                            <option value="pc-login-issue">Can't login to my PC</option>
+                        </select>
+                        <div class="hint">Choose a template to auto-fill common issue details.</div>
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="title">Ticket Title <span class="required">*</span></label>
+                        <input id="title" name="title" type="text" placeholder="Example: IFS is locked" required />
+                        <div class="hint">Short and precise – it helps with quick triage.</div>
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="description">Ticket Description <span class="required">*</span></label>
+                        <textarea id="description"
+                                  name="description"
+                                  rows="10"
+                                  placeholder="1) What is the challenge/request? 2) Who is affected? 3) Suggestion for solution?"
+                                  required></textarea>
+                    </div>
+
+                    <div class="field field-with-hint">
+                        <label for="department">Department <span class="required">*</span></label>
+                        <select id="department" name="department" required>
+                            <option value="" selected disabled hidden>Select...</option>
+                        </select>
+                        <div class="hint hint-spacer" aria-hidden="true">&nbsp;</div>
+                    </div>
+                    <div class="field field-full">
+                        <label for="category">Category <span class="required">*</span></label>
+                        <select id="category" name="category" required>
+                            <option value="" selected disabled hidden>Select category...</option>
+                        </select>
+                    </div>
+
+                    <div class="field field-full">
+                        <label for="files">Attach files (optional)</label>
+                        <div class="upload">
+                            <input id="files" name="files" type="file" multiple />
+                            <div class="hint upload-hint">
+                                Images, PDF, documents. Max approx. 10–20 MB per file recommended.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="reset" class="btn">Reset</button>
+                    <button type="submit" class="btn btn-primary">Submit</button>
+                </div>
+
+                <div class="footer-tip">
+                    Tip: The more concrete the description is, the faster we can process the request.
+                </div>
+            </form>
+        </section>
+
+        <div id="receipt" class="receipt" hidden>
+            <h3>Ticket received</h3>
+            <p><strong>Thanks.</strong> Your ticket has been created.</p>
+            <div id="receiptContent"></div>
+        </div>
+    </div>
+</div>
+
+@section Scripts {
+    <script>
+        const apiBase = '@ViewData["ApiBaseUrl"]';
+        const form = document.getElementById('ticketForm');
+        const receipt = document.getElementById('receipt');
+        const receiptContent = document.getElementById('receiptContent');
+        const ticketTemplate = document.getElementById('ticketTemplate');
+        const titleInput = document.getElementById('title');
+        const descriptionInput = document.getElementById('description');
+        const departmentSelect = document.getElementById('department');
+        const categorySelect = document.getElementById('category');
+
+        const templates = {
+            'outlook-send-mail': {
+                title: "Outlook can't send mail",
+                description: "Outlook fails when sending emails. User can open Outlook and read mail, but send attempts stay pending or return an error.",
+                department: 'Infrastructure',
+                category: 'Software issues'
+            },
+            'vpn-cannot-connect': {
+                title: "VPN cannot connect",
+                description: "I cannot establish VPN connection from outside the office. VPN client shows timeout/authentication error and access to internal systems is blocked.",
+                department: 'Infrastructure',
+                category: 'Network issues'
+            },
+            'pc-login-issue': {
+                title: "Can't login to my PC",
+                description: "I cannot sign in to their Windows account on their PC. Login fails with invalid credentials/temporary profile/lockout message and user cannot access desktop.",
+                department: 'Infrastructure',
+                category: 'Login issues'
+            }
+        };
+
+        ticketTemplate.addEventListener('change', function () {
+            const selectedTemplate = templates[this.value];
+            if (!selectedTemplate) {
+                return;
+            }
+
+            titleInput.value = selectedTemplate.title;
+            descriptionInput.value = selectedTemplate.description;
+            departmentSelect.value = selectedTemplate.department;
+            categorySelect.value = selectedTemplate.category;
+        });
+
+        // Maps for category and department name → id
+        let categoryMap = {};
+        let departmentMap = {};
+
+         // Add this simple toast function at top of your script
+        function showToast(message, type = 'success') {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position:fixed; bottom:24px; right:24px; z-index:9999;
+                background:${type === 'success' ? '#22c55e' : '#dc2626'};
+                color:white; padding:0.75rem 1.2rem; border-radius:8px;
+                font-size:0.9rem; box-shadow:0 4px 12px rgba(0,0,0,0.3);
+                animation: fadeIn 0.3s ease;
+            `;
+            toast.textContent = message;
+            document.body.appendChild(toast);
+            setTimeout(() => toast.remove(), 3000);
+        }
+
+        // Fetch categories and departments from API and populate dropdowns
+        async function loadMaps() {
+            const [catRes, deptRes] = await Promise.all([
+                 fetch(`${apiBase}/api/ticketcategories`),  //
+                fetch(`${apiBase}/api/ticketdepartments`)   // 
+            ]);
+
+            if (catRes.ok) {
+                const cats = await catRes.json();
+                cats.forEach(c => categoryMap[c.name] = c.id);
+
+                // Populate category dropdown from API
+                const catSelect = document.getElementById('category');
+                catSelect.innerHTML = '<option value="" selected disabled hidden>Select category...</option>';
+                cats.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c.name;
+                    opt.textContent = c.name;
+                    catSelect.appendChild(opt);
+                });
+            }
+
+            if (deptRes.ok) {
+                const depts = await deptRes.json();
+                depts.forEach(d => departmentMap[d.name] = d.id);
+
+                // Populate department dropdown from API
+                const deptSelect = document.getElementById('department');
+                deptSelect.innerHTML = '<option value="" selected disabled hidden>Select...</option>';
+                depts.forEach(d => {
+                    const opt = document.createElement('option');
+                    opt.value = d.name;
+                    opt.textContent = d.name;
+                    deptSelect.appendChild(opt);
+                });
+            }
+
+            console.log(" Maps loaded:", categoryMap, departmentMap);
+        }
+
+        // Map name to id using dynamic maps
+        function mapCategoryToId(name) { return categoryMap[name] ?? 0; }
+        function mapDepartmentToId(name) { return departmentMap[name] ?? 0; }
+
+        // Load maps on page start
+        loadMaps();
+
+        // Form submit
+        form.addEventListener('submit', async function (e) {
+            e.preventDefault();
+
+            const data = new FormData(form);
+            const token = document.querySelector('input[name="__RequestVerificationToken"]').value;
+
+            // Build ticket payload
+            const payload = {
+                assignedToUserId: null,
+                ticketCategoryId: mapCategoryToId(data.get('category')),
+                ticketPriorityId: 2,
+                statusId: 1,
+                ticketDepartmentId: mapDepartmentToId(data.get('department')),
+                title: data.get('title'),
+                description: data.get('description'),
+                dueDate: null,
+                createdAt: new Date().toISOString(),
+                updatedAt: new Date().toISOString(),
+                closedAt: null
+            };
+
+            try {
+                // Step 1 — Create ticket
+                const response = await fetch('/Tickets/Create', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'RequestVerificationToken': token
+                    },
+                    body: JSON.stringify(payload)
+                });
+
+                const result = await response.json();
+
+                if (!response.ok) {
+                    console.error('API Error:', result);
+                    alert('Error: ' + (result.details || result.message || JSON.stringify(result)));
+                    return;
+                }
+
+                // Parse ticket object
+                let ticketObj = typeof result === 'string' ? JSON.parse(result) : result;
+                console.log(" Ticket created:", ticketObj);
+
+                // Step 2 — Upload attachments one by one if any
+                const filesInput = document.getElementById('files');
+                if (filesInput.files.length > 0) {
+                    for (let file of filesInput.files) {
+                        const fileFormData = new FormData();
+                        fileFormData.append('file', file);
+                        fileFormData.append('ticketId', ticketObj.id);
+                        fileFormData.append('uploadedByUserId', ticketObj.createdByUserId ?? 0);
+
+                        try {
+                            const attachmentResponse = await fetch(`${apiBase}/api/attachments/upload`, {
+                                method: 'POST',
+                                body: fileFormData
+                            });
+
+                            if (!attachmentResponse.ok) {
+                                console.warn('❌ File upload failed:', file.name, attachmentResponse.status);
+                            } else {
+                                console.log(' File uploaded:', file.name);
+                            }
+                        } catch (attachmentError) {
+                            console.warn('❌ File upload error:', file.name, attachmentError);
+                        }
+                    }
+                }
+
+                // Step 3 — Show receipt
+                receiptContent.innerHTML = `
+                    <div class="row g-3 py-2">
+                        <div class="col-md-6">
+                            <label class="text-white-50 small text-uppercase fw-bold letter-spacing-1 d-block mb-1">Ticket ID</label>
+                            <div class="text-primary fw-bold fs-5">#${ticketObj.id}</div>
+                        </div>
+                        <div class="col-md-6">
+                            <label class="text-white-50 small text-uppercase fw-bold letter-spacing-1 d-block mb-1">Status</label>
+                            <div>
+                                <span class="badge-status status-active">
+                                    <i class="bi bi-clock-fill me-1"></i> Active
+                                </span>
+                            </div>
+                        </div>
+                        <div class="col-12 border-top border-white-10 pt-3 mt-3">
+                            <label class="text-white-50 small text-uppercase fw-bold letter-spacing-1 d-block mb-1">Title</label>
+                            <div class="text-white fw-bold fs-5">${ticketObj.title}</div>
+                        </div>
+                        <div class="col-12">
+                            <label class="text-white-50 small text-uppercase fw-bold letter-spacing-1 d-block mb-1">Description</label>
+                            <div class="text-white opacity-90">${data.get('description')}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-white-50 small text-uppercase fw-bold letter-spacing-1 d-block mb-1">Department</label>
+                            <div class="text-white">${data.get('department')}</div>
+                        </div>
+                        <div class="col-md-4">
+                            <label class="text-white-50 small text-uppercase fw-bold letter-spacing-1 d-block mb-1">Category</label>
+                            <div class="text-white">${data.get('category')}</div>
+                        </div>
+                    </div>
+                `;
+
+                receipt.hidden = false;
+                showToast('Ticket #' + ticketObj.id + ' created successfully!');
+                form.reset();
+                window.scrollTo({ top: receipt.offsetTop - 40, behavior: 'smooth' });
+
+            } catch (error) {
+                alert('An error occurred. Check the console for details.');
+                console.error(error);
+            }
+        });
+
+       
+    </script>
+}

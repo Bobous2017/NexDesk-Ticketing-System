@@ -1,0 +1,83 @@
+﻿@model NexDesk.Web.Models.TicketVm
+@{
+    ViewData["Title"] = "Edit Ticket";
+    var tasks = ViewBag.Tasks as List<NexDesk.Domain.Entities.Task.TicketTask> ?? new List<NexDesk.Domain.Entities.Task.TicketTask>();
+}
+
+<div class="card">
+    <h3>Ticket #@Model.Id</h3>
+    <form asp-action="Update" asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" asp-for="Id" />
+        <div class="form-grid">
+            <div><label>Title</label><input asp-for="Title" class="input" required /></div>
+            <div><label>Description</label><textarea asp-for="Description" class="input"></textarea></div>
+            @if(User.FindFirst("PermissionLevel")?.Value == "3")
+            {
+                <div><label>Category ID</label><input asp-for="TicketCategoryId" class="input" type="number" /></div>
+                <div><label>Priority ID</label><input asp-for="TicketPriorityId" class="input" type="number" /></div>
+                <div><label>Department ID</label><input asp-for="TicketDepartmentId" class="input" type="number" /></div>
+                <div><label>Assign To (User ID)</label><input asp-for="AssignedToUserId" class="input" type="number" /></div>
+            }
+            <div><label>Status ID</label><input asp-for="StatusId" class="input" type="number" /></div>
+            <div class="actions">
+                <a class="btn" asp-action="Index">Cancel</a>
+                <button class="btn primary" type="submit">Save</button>
+            </div>
+        </div>
+    </form>
+
+    <hr />
+
+    <h4>Add Task</h4>
+    @if (TempData["TaskError"] is string taskError)
+    {
+        <p class="text-danger">@taskError</p>
+    }
+    <form asp-action="AddTask" method="post">
+        @Html.AntiForgeryToken()
+        <input type="hidden" name="ticketId" value="@Model.Id" />
+        <div class="form-grid">
+            <div><label>Task title</label><input name="title" class="input" required /></div>
+            <div><label>Description</label><textarea name="description" class="input"></textarea></div>
+            <div><label>Due date</label><input name="dueDate" class="input" type="date" /></div>
+            <div class="actions">
+                <button class="btn primary" type="submit">Add Task</button>
+            </div>
+        </div>
+    </form>
+
+    <h4>Tasks</h4>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>Title</th>
+                <th>Status</th>
+                <th>Assigned</th>
+                <th>Due Date</th>
+            </tr>
+        </thead>
+        <tbody>
+            @if (tasks.Count == 0)
+            {
+                <tr>
+                    <td colspan="5">No tasks yet.</td>
+                </tr>
+            }
+            else
+            {
+                @foreach (var task in tasks)
+                {
+                    <tr>
+                        <td>#@task.Id</td>
+                        <td>@task.Title</td>
+                        <td>@(task.Status?.Name ?? "-")</td>
+                        <td>@(task.AssignedUser != null ? $"{task.AssignedUser.FirstName} {task.AssignedUser.LastName}".Trim() : "Unassigned")</td>
+                        <td>@(task.DueDate?.ToString("yyyy-MM-dd") ?? "-")</td>
+                    </tr>
+                }
+            }
+        </tbody>
+    </table>
+</div>

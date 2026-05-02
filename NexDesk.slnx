@@ -1,0 +1,10 @@
+<Solution>
+  <Project Path="NexDesk.API/NexDesk.API.csproj" />
+  <Project Path="NexDesk.Domain/NexDesk.Domain.csproj" />
+  <Project Path="NexDesk.Infrastructure/NexDesk.Infrastructure.csproj" />
+  <Project Path="NexDesk.Tests/NexDesk.Tests.csproj" />
+  <Project Path="NexDesk.Webform/NexDesk.Webform.csproj" Id="c072e94e-6ff1-49e3-9290-fc17c8ed437b">
+    <Build Solution="Debug|*" Project="false" />
+  </Project>
+  <Project Path="NexDesk/NexDesk.Web.csproj" />
+</Solution>

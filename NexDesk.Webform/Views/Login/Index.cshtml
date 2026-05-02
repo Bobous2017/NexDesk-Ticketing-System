@@ -1,0 +1,100 @@
+﻿@model NexDesk.Domain.Dtos.LoginDto
+
+@{
+    Layout = null;
+}
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <title>NexDesk Login</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" href="~/css/loginForm.css" />
+</head>
+<body>
+    <main class="auth-card" role="main" aria-labelledby="title">
+        <div class="logo-wrap">
+            <div class="logo">
+                <img src="/img/nexdesk_logo_nobg.png" alt="NexDesk" />
+            </div>
+            <div class="brand">NexDesk</div>
+        </div>
+
+        <h1 id="title">Log in</h1>
+        <p class="lead">Use your work credentials.</p>
+
+        <form asp-controller="Login" asp-action="Login" method="post" autocomplete="off" novalidate>
+            @Html.AntiForgeryToken()
+            <div class="form-grid">
+                <div>
+                    <label asp-for="UserName">Username/Email</label>
+                    <input asp-for="UserName" class="input" placeholder="Enter your username" autocomplete="username" required />
+                </div>
+
+                <div>
+                    <label asp-for="PassWord">Password</label>
+                    <input asp-for="PassWord" class="input" type="password" placeholder="Enter your password" autocomplete="current-password" required />
+                </div>
+
+                <div class="actions">
+                    <span class="subtle">Need help? Contact IT.</span>
+                    <span class="subtle">Nexdesk2017@gmail.com</span>
+                    <button class="btn" type="submit" id="loginBtn">Log in</button>
+                </div>
+            </div>
+        </form>
+
+        <div class="footer">© 2025 NexDesk</div>
+
+        @* Error messages except "3x attempts" *@
+        @if (ViewData.ModelState.Values.Any(v => v.Errors.Any(e => !e.ErrorMessage.Contains("3x attempts"))))
+        {
+            <div class="alert alert-danger">
+                @foreach (var error in ViewData.ModelState.Values.SelectMany(v => v.Errors))
+                {
+                    if (!error.ErrorMessage.Contains("3x attempts"))
+                    {
+                        <p>@error.ErrorMessage</p>
+                    }
+                }
+            </div>
+        }
+
+        @* Countdown *@
+        @if (ViewData.ModelState.Values.Any(v => v.Errors.Any(e => e.ErrorMessage.Contains("3x attempts"))))
+        {
+            <div class="alert alert-danger">
+                <p id="rateLimitMessage">⏳ Too many login attempts. Try again in <span id="countdown">60</span> seconds.</p>
+            </div>
+
+            <script>
+                document.addEventListener("DOMContentLoaded", function () {
+                    const username = document.getElementById("UserName");
+                    const password = document.getElementById("PassWord");
+                    const loginBtn = document.getElementById("loginBtn");
+
+                    if (username) username.disabled = true;
+                    if (password) password.disabled = true;
+                    if (loginBtn) loginBtn.disabled = true;
+
+                    const countdownDisplay = document.getElementById("countdown");
+
+                    let secondsLeft = 60;
+                    const timer = setInterval(() => {
+                        secondsLeft--;
+                        countdownDisplay.textContent = secondsLeft;
+                        if (secondsLeft <= 0) {
+                            clearInterval(timer);
+                            if (username) username.disabled = false;
+                            if (password) password.disabled = false;
+                            if (loginBtn) loginBtn.disabled = false;
+                            document.getElementById("rateLimitMessage").textContent = "✅ You can try again now.";
+                        }
+                    }, 1000);
+                });
+            </script>
+        }
+    </main>
+</body>
+</html>

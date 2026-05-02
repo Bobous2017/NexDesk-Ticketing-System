@@ -1,0 +1,73 @@
+﻿@model List<NexDesk.Webform.Models.TicketHistoryVm>
+
+@{
+    ViewData["Title"] = "history";
+}
+
+<div class="container py-2 py-md-4">
+    <div class="row">
+        <div class="col-12">
+            <h2 class="text-white mb-4">Din ticket history</h2>
+
+            @if (!Model.Any())
+            {
+                <p class="text-white">Du har endnu ikke Created nogen tickets.</p>
+            }
+            else
+            {
+                <div class="table-responsive history-wrap">
+                    <table class="table table-dark table-hover mb-0">
+                        <thead style="background: rgba(0,0,0,0.2);">
+                            <tr class="text-primary font-weight-bold">
+                                <th class="px-4">ID</th>
+                                <th>Title</th>
+                                <th>Department</th>
+                                <th>Description</th>
+                                <th class="d-none d-lg-table-cell text-nowrap">Resolution</th>
+                                <th class="text-nowrap">Created</th>
+                                <th class="text-end pe-4">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var t in Model)
+                            {
+                                <tr class="align-middle" onclick="void(0)">
+                                    <td data-label="ID">#@t.Id</td>
+                                    <td data-label="Title" class="text-white fw-semibold">
+                                        @t.Title
+                                    </td>
+                                    <td data-label="Department">@t.DepartmentName</td>
+                                    <td data-label="Description" class="description-cell">
+                                        <div class="text-line-clamp" title="@t.Description">
+                                            @t.Description
+                                        </div>
+                                    </td>
+                                    <td data-label="Resolution" class="description-cell d-none d-lg-table-cell">
+                                        <div class="text-line-clamp" title="@t.ResolutionText">
+                                            @t.ResolutionText
+                                        </div>
+                                    </td>
+                                    <td data-label="Created" class="text-nowrap">@t.CreatedAt.ToString("dd-MM-yyyy HH:mm")</td>
+                                    <td data-label="Status">
+                                        @if (t.ClosedAt.HasValue)
+                                        {
+                                            <span class="badge-status status-closed">
+                                                <i class="bi bi-check-circle-fill me-1"></i> Closed
+                                            </span>
+                                        }
+                                        else
+                                        {
+                                            <span class="badge-status status-active">
+                                                <i class="bi bi-clock-fill me-1"></i> Active
+                                            </span>
+                                        }
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+</div>
