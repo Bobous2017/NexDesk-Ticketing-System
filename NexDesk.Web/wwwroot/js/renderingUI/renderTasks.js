@@ -17,7 +17,7 @@
     const taskList = document.getElementById('taskList');
     if (!taskList) return;
 
-    const allTasks = ((dashboardVm?.tasks?.length ? dashboardVm.tasks : state.tasks) ?? [])
+    const allTasks = (dashboardVm?.tasks ?? [])
         .filter(t => Number(t?.isActive ?? 1) === 1);
     const myUserId = Number(loggedInUserId || 0);
    

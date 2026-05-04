@@ -29,7 +29,7 @@ namespace NexDesk.Webform.Controllers
         {
             ViewData["Title"] = "Velkommen til NexDesk hos IT&Data Odense";
             ViewData["Breadcrumb"] = "Forside > Velkommen";
-            var apiBase = _config["Api:BaseUrl"] ?? "";
+            var apiBase = _config["Api:PublicUrl"] ?? _config["Api:BaseUrl"] ?? "";
             ViewData["ApiBaseUrl"] = apiBase;
             return View();
         }

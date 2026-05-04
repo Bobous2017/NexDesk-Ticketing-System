@@ -41,6 +41,7 @@ namespace NexDesk.Infrastructure
 
             //-------------------------------- Role entitet konfiguration ------------------------------ 1
             b.Entity<Role>().HasKey(x => x.Id); // Sætter 'Id' som den primære nøgle (Primary Key) for tabellen.
+            b.Entity<Role>().Property(x => x.Name).HasMaxLength(100).IsRequired(); // for docker to allow migrations to run, we need to set a max length for string properties. IsRequired() betyder at 'Name' ikke må være null.
             b.Entity<Role>().HasIndex(x => x.Name).IsUnique(); // Opretter et unikt indeks på 'Name', så to roller ikke kan have samme navn (f.eks. "Admin").
             b.Entity<Role>().Property(x => x.PermissionLevel).HasColumnName("Permission_Level");
 

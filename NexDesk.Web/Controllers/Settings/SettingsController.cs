@@ -21,9 +21,9 @@ namespace NexDesk.Web.Controllers.Settings
         [HttpGet] //--------------------------------------------- GET: in button  for Settings
         public IActionResult Index()
         {
-            var apiUrl = _config["Api:BaseUrl"];
-            Console.WriteLine($"Api:BaseUrl = '{apiUrl}'"); // ← check terminal output
-            ViewData["ApiBaseUrl"] = apiUrl;
+            var apiBase = _config["Api:PublicUrl"] ?? _config["Api:BaseUrl"] ?? "";
+            Console.WriteLine($"Api:BaseUrl = '{apiBase}'"); // ← check terminal output
+            ViewData["ApiBaseUrl"] = apiBase;
             return View("Settings");
         }
 

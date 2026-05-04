@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Metadata;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using NexDesk.Infrastructure;
 
@@ -15,32 +16,88 @@ namespace NexDesk.Infrastructure.Migrations
         protected override void BuildModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
-            modelBuilder.HasAnnotation("ProductVersion", "8.0.8");
+            modelBuilder
+                .HasAnnotation("ProductVersion", "8.0.8")
+                .HasAnnotation("Relational:MaxIdentifierLength", 128);
+
+            SqlServerModelBuilderExtensions.UseIdentityColumns(modelBuilder);
+
+            modelBuilder.Entity("NexDesk.Domain.Entities.Attachment", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<DateTime>("CreatedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("Created_At");
+
+                    b.Property<string>("FileName")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("File_Name");
+
+                    b.Property<string>("FilePath")
+                        .IsRequired()
+                        .HasMaxLength(500)
+                        .HasColumnType("nvarchar(500)")
+                        .HasColumnName("File_Path");
+
+                    b.Property<string>("FileType")
+                        .IsRequired()
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)")
+                        .HasColumnName("File_Type");
+
+                    b.Property<int?>("ReportId")
+                        .HasColumnType("int")
+                        .HasColumnName("Report_Id");
+
+                    b.Property<int>("TicketId")
+                        .HasColumnType("int")
+                        .HasColumnName("Ticket_Id");
+
+                    b.Property<int>("UploadedByUserId")
+                        .HasColumnType("int")
+                        .HasColumnName("Uploaded_By_User_Id");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("TicketId");
+
+                    b.HasIndex("UploadedByUserId");
+
+                    b.ToTable("Attachments", (string)null);
+                });
 
             modelBuilder.Entity("NexDesk.Domain.Entities.Comment", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("CommentText")
                         .IsRequired()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Comment_Text");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Created_At");
 
-          
-
                     b.Property<int>("TicketId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Id");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("User_Id");
 
                     b.HasKey("Id");
@@ -56,33 +113,35 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("ActionType")
                         .IsRequired()
                         .HasMaxLength(100)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(100)")
                         .HasColumnName("Action_Type");
 
                     b.Property<int>("ChangedByUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Changed_By_User_Id");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Created_At");
 
                     b.Property<string>("NewValue")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("New_Value");
 
                     b.Property<string>("OldValue")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Old_Value");
 
                     b.Property<int>("TicketId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Id");
 
                     b.HasKey("Id");
@@ -98,34 +157,36 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Created_At");
 
                     b.Property<bool>("IsRead")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bit")
                         .HasColumnName("Is_Read");
 
                     b.Property<string>("Message")
                         .IsRequired()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Message");
 
                     b.Property<int?>("TicketId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Id");
 
                     b.Property<string>("Type")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("Type");
 
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("User_Id");
 
                     b.HasKey("Id");
@@ -141,55 +202,69 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<string>("AdminFeedback")
+                        .HasColumnType("varchar(max)")
+                        .HasColumnName("Admin_Feedback");
+
+                    b.Property<DateTime?>("ClosedAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("Closed_At");
+
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Created_At");
 
                     b.Property<int>("CreatedByUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Created_By_User_Id");
 
+                    b.Property<DateTime?>("CustomerEmailSentAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("Customer_Email_Sent_At");
+
                     b.Property<DateTime?>("QrApprovedAtUtc")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Qr_Approved_At_Utc");
 
                     b.Property<int?>("QrApprovedByUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Qr_Approved_By_User_Id");
 
                     b.Property<DateTime?>("QrRevokedAtUtc")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Qr_Revoked_At_Utc");
 
                     b.Property<DateTime?>("QrTokenExpiresAtUtc")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Qr_Token_Expires_At_Utc");
 
                     b.Property<string>("QrTokenHash")
                         .HasMaxLength(256)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(256)")
                         .HasColumnName("Qr_Token_Hash");
 
                     b.Property<DateTime?>("QrUsedAtUtc")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Qr_Used_At_Utc");
 
                     b.Property<string>("ResolutionText")
                         .IsRequired()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Resolution_Text");
 
                     b.Property<string>("Summary")
                         .IsRequired()
                         .HasMaxLength(255)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(255)")
                         .HasColumnName("Summary");
 
                     b.Property<int>("TicketId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Id");
 
                     b.HasKey("Id");
@@ -203,35 +278,74 @@ namespace NexDesk.Infrastructure.Migrations
                     b.ToTable("Reports", (string)null);
                 });
 
+            modelBuilder.Entity("NexDesk.Domain.Entities.ReportEmailLog", b =>
+                {
+                    b.Property<int>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("int")
+                        .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
+                    b.Property<int>("ReportId")
+                        .HasColumnType("int")
+                        .HasColumnName("Report_Id");
+
+                    b.Property<DateTime>("SentAt")
+                        .HasColumnType("datetime2")
+                        .HasColumnName("Sent_At");
+
+                    b.Property<string>("SentToEmail")
+                        .IsRequired()
+                        .HasMaxLength(255)
+                        .HasColumnType("nvarchar(255)")
+                        .HasColumnName("Sent_To_Email");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("ReportId");
+
+                    b.ToTable("ReportEmailLogs", (string)null);
+                });
+
             modelBuilder.Entity("NexDesk.Domain.Entities.Role", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasMaxLength(100)
+                        .HasColumnType("nvarchar(100)");
+
+                    b.Property<int>("PermissionLevel")
+                        .HasColumnType("int")
+                        .HasColumnName("Permission_Level");
 
                     b.HasKey("Id");
 
                     b.HasIndex("Name")
                         .IsUnique();
 
-                    b.ToTable("Roles", (string)null);
+                    b.ToTable("Roles");
                 });
 
             modelBuilder.Entity("NexDesk.Domain.Entities.Status", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("Name");
 
                     b.HasKey("Id");
@@ -246,50 +360,56 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("AssignedUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Assigned_User_Id");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Closed_At");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Created_At");
 
                     b.Property<int?>("CreatedByUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Created_By_User_Id");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Description");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Due_Date");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
                     b.Property<int>("StatusId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Statuses_Id");
 
                     b.Property<int>("TicketId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Id");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(150)")
                         .HasColumnName("Title");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Updated_At");
 
                     b.HasKey("Id");
@@ -309,58 +429,64 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<int?>("AssignedToUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Assigned_To_User_Id");
 
                     b.Property<DateTime?>("ClosedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Closed_At");
 
                     b.Property<DateTime>("CreatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Created_At");
 
                     b.Property<int>("CreatedByUserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Created_By_User_Id");
 
                     b.Property<string>("Description")
                         .IsRequired()
-                        .HasColumnType("TEXT")
+                        .HasColumnType("varchar(max)")
                         .HasColumnName("Description");
 
                     b.Property<DateTime?>("DueDate")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Due_Date");
 
+                    b.Property<bool>("IsActive")
+                        .HasColumnType("bit")
+                        .HasColumnName("IsActive");
+
                     b.Property<int>("StatusId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Statuses_Id");
 
                     b.Property<int>("TicketCategoryId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Category_Id");
 
                     b.Property<int>("TicketDepartmentId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Department_Id");
 
                     b.Property<int>("TicketPriorityId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Ticket_Priority_Id");
 
                     b.Property<string>("Title")
                         .IsRequired()
                         .HasMaxLength(150)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(150)")
                         .HasColumnName("Title");
 
                     b.Property<DateTime>("UpdatedAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Updated_At");
 
                     b.HasKey("Id");
@@ -384,13 +510,15 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("Name");
 
                     b.HasKey("Id");
@@ -405,13 +533,15 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("Name");
 
                     b.HasKey("Id");
@@ -426,13 +556,15 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
+
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasMaxLength(50)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(50)")
                         .HasColumnName("Name");
 
                     b.HasKey("Id");
@@ -447,59 +579,49 @@ namespace NexDesk.Infrastructure.Migrations
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
-                    b.Property<string>("AddressLine1")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AddressLine2")
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("City")
-                        .HasColumnType("TEXT");
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
                     b.Property<string>("Email")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(450)");
 
                     b.Property<string>("FirstName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("LastName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PassWord")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("PasswordResetOtp")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("PasswordResetOtpExpiry")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("PasswordResetToken")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<DateTime?>("PasswordResetTokenExpiry")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Phone")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("RfidChip")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<int>("RoleId")
-                        .HasColumnType("INTEGER");
+                        .HasColumnType("int");
 
                     b.Property<string>("UserName")
                         .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("ZipCode")
-                        .HasColumnType("TEXT");
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -508,31 +630,42 @@ namespace NexDesk.Infrastructure.Migrations
 
                     b.HasIndex("RoleId");
 
-                    b.ToTable("Users", (string)null);
+                    b.ToTable("Users", t =>
+                        {
+                            t.HasTrigger("trg_UserProfile_AutoCreate");
+                        });
+
+                    b.HasAnnotation("SqlServer:UseSqlOutputClause", false);
                 });
 
             modelBuilder.Entity("NexDesk.Domain.Entities.UserProfile", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("Id");
 
+                    SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
+
                     b.Property<bool>("IsActive")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("bit")
                         .HasColumnName("Is_Active");
 
                     b.Property<DateTime?>("LastLoginAt")
-                        .HasColumnType("TEXT")
+                        .HasColumnType("datetime2")
                         .HasColumnName("Last_Login_At");
 
                     b.Property<string>("ProfilePicture")
                         .HasMaxLength(500)
-                        .HasColumnType("TEXT")
+                        .HasColumnType("nvarchar(500)")
                         .HasColumnName("Profile_Picture");
 
+                    b.Property<int?>("SessionTimeoutMinutes")
+                        .HasColumnType("int")
+                        .HasColumnName("Session_Timeout_Minutes");
+
                     b.Property<int>("UserId")
-                        .HasColumnType("INTEGER")
+                        .HasColumnType("int")
                         .HasColumnName("User_Id");
 
                     b.HasKey("Id");
@@ -541,6 +674,25 @@ namespace NexDesk.Infrastructure.Migrations
                         .IsUnique();
 
                     b.ToTable("UserProfiles", (string)null);
+                });
+
+            modelBuilder.Entity("NexDesk.Domain.Entities.Attachment", b =>
+                {
+                    b.HasOne("NexDesk.Domain.Entities.Ticket", "Ticket")
+                        .WithMany()
+                        .HasForeignKey("TicketId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.HasOne("NexDesk.Domain.Entities.User", "UploadedByUser")
+                        .WithMany()
+                        .HasForeignKey("UploadedByUserId")
+                        .OnDelete(DeleteBehavior.Restrict)
+                        .IsRequired();
+
+                    b.Navigation("Ticket");
+
+                    b.Navigation("UploadedByUser");
                 });
 
             modelBuilder.Entity("NexDesk.Domain.Entities.Comment", b =>
@@ -613,7 +765,7 @@ namespace NexDesk.Infrastructure.Migrations
                         .OnDelete(DeleteBehavior.Restrict);
 
                     b.HasOne("NexDesk.Domain.Entities.Ticket", "Ticket")
-                        .WithMany()
+                        .WithMany("Reports")
                         .HasForeignKey("TicketId")
                         .OnDelete(DeleteBehavior.Restrict)
                         .IsRequired();
@@ -623,6 +775,17 @@ namespace NexDesk.Infrastructure.Migrations
                     b.Navigation("QrApprovedByUser");
 
                     b.Navigation("Ticket");
+                });
+
+            modelBuilder.Entity("NexDesk.Domain.Entities.ReportEmailLog", b =>
+                {
+                    b.HasOne("NexDesk.Domain.Entities.Report", "Report")
+                        .WithMany("EmailLogs")
+                        .HasForeignKey("ReportId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("Report");
                 });
 
             modelBuilder.Entity("NexDesk.Domain.Entities.Task.TicketTask", b =>
@@ -730,8 +893,15 @@ namespace NexDesk.Infrastructure.Migrations
                     b.Navigation("User");
                 });
 
+            modelBuilder.Entity("NexDesk.Domain.Entities.Report", b =>
+                {
+                    b.Navigation("EmailLogs");
+                });
+
             modelBuilder.Entity("NexDesk.Domain.Entities.Ticket", b =>
                 {
+                    b.Navigation("Reports");
+
                     b.Navigation("Tasks");
                 });
 #pragma warning restore 612, 618

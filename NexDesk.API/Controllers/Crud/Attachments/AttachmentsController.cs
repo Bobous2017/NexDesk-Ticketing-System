@@ -25,7 +25,7 @@ namespace NexDesk.API.Controllers.Crud
         [HttpGet("ticket/{ticketId:int}")]
         public async Task<IActionResult> GetByTicket(int ticketId)
         {
-            var apiBase = _config["Api:BaseUrl"] ?? "";
+            var apiBase = _config["Api:PublicUrl"] ?? _config["Api:BaseUrl"] ?? "";
             var items = await _db.Attachments
                 .Include(x => x.UploadedByUser)
                 .Where(x => x.TicketId == ticketId)
@@ -89,7 +89,7 @@ namespace NexDesk.API.Controllers.Crud
             _db.Attachments.Add(attachment);
             await _db.SaveChangesAsync();
 
-            var apiBase = _config["Api:BaseUrl"] ?? "";
+            var apiBase = _config["Api:PublicUrl"] ?? _config["Api:BaseUrl"] ?? "";
             return Ok(new AttachmentDto
             {
                 Id = attachment.Id,

@@ -1,10 +1,5 @@
 ﻿using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Design;
-using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace NexDesk.Infrastructure
 {
@@ -14,8 +9,10 @@ namespace NexDesk.Infrastructure
         {
             var optionsBuilder = new DbContextOptionsBuilder<NexDeskDbContext>();
 
-            // Use your actual connection string here
-            optionsBuilder.UseSqlite("Data Source=nexdesk.db"); // Example using SQLite, replace with your database provider and connection string for NexDesk
+            // This is  for  publishing the application to Azure, as Docker or Azure needs a connection string at design time to run migrations.
+            optionsBuilder.UseSqlServer(
+                "Server=localhost,1433;Database=NexDeskDB;User Id=sa;Password=NexDesk2025!;TrustServerCertificate=True;"
+            );
 
             return new NexDeskDbContext(optionsBuilder.Options);
         }

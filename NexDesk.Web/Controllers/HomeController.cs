@@ -237,7 +237,7 @@ namespace NexDesk.Controllers
             {
                 _logger.LogError(ex, "Error while loading dashboard data.");
             }
-            ViewData["ApiBaseUrl"] = _config["Api:BaseUrl"];
+            ViewData["ApiBaseUrl"] = _config["Api:PublicUrl"] ?? _config["Api:BaseUrl"] ?? "";
             return View(model);
         }
 
