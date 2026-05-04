@@ -1,0 +1,24 @@
+﻿@model NexDesk.Web.Models.TicketVm
+@{
+    ViewData["Title"] = "Create Ticket";
+}
+
+<div class="card">
+    <h3>Create Ticket</h3>
+    <form asp-action="Create" method="post">
+        @Html.AntiForgeryToken()
+        <div class="form-grid">
+            <div><label>Title</label><input asp-for="Title" class="input" required /></div>
+            <div><label>Description</label><textarea asp-for="Description" class="input"></textarea></div>
+            <div><label>Category ID</label><input asp-for="TicketCategoryId" class="input" type="number" /></div>
+            <div><label>Priority ID</label><input asp-for="TicketPriorityId" class="input" type="number" /></div>
+            <div><label>Status ID</label><input asp-for="StatusId" class="input" type="number" /></div>
+            <div><label>Department ID</label><input asp-for="TicketDepartmentId" class="input" type="number" /></div>
+            <div><label>Assign To (User ID)</label><input asp-for="AssignedToUserId" class="input" type="number" /></div>
+            <div class="actions">
+                <a class="btn" asp-action="Index">Cancel</a>
+                <button class="btn primary" type="submit">Create</button>
+            </div>
+        </div>
+    </form>
+</div>

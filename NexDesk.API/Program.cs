@@ -49,7 +49,7 @@ var providerName = builder.Configuration["DatabaseProvider"];
 
 IDatabaseProvider dbProvider = providerName switch
 {
-    "SqlServer" => new SqlServerProvider(builder.Configuration.GetConnectionString("NexDeskDB")!),
+    "SqlServer" => new SqlServerProvider(builder.Configuration.GetConnectionString("SqlServer")!),
     "SQLite" => new SqliteProvider(builder.Configuration.GetConnectionString("SQLite")!),
     "WindowsServer" => new SqlServerProvider(builder.Configuration.GetConnectionString("WindowsServer")!),
     _ => throw new Exception($"Unknown DatabaseProvider: '{providerName}'. Check appsettings.json.")

@@ -1,0 +1,27 @@
+# ---- Build Stage ----
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy project files first (for layer caching)
+COPY NexDesk.Domain/NexDesk.Domain.csproj NexDesk.Domain/
+COPY NexDesk.Infrastructure/NexDesk.Infrastructure.csproj NexDesk.Infrastructure/
+COPY NexDesk.API/NexDesk.API.csproj NexDesk.API/
+
+# Restore dependencies
+RUN dotnet restore NexDesk.API/NexDesk.API.csproj
+
+# Copy all source code
+COPY NexDesk.Domain/ NexDesk.Domain/
+COPY NexDesk.Infrastructure/ NexDesk.Infrastructure/
+COPY NexDesk.API/ NexDesk.API/
+
+# Publish release build
+RUN dotnet publish NexDesk.API/NexDesk.API.csproj -c Release -o /app/publish
+
+# ---- Runtime Stage ----
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 5093
+ENTRYPOINT ["dotnet", "NexDesk.API.dll"]

@@ -1,0 +1,17 @@
+﻿@model NexDesk.Web.Models.TicketVm
+@{
+    ViewData["Title"] = "Delete Ticket";
+}
+
+<div class="card">
+    <h3>Delete Ticket #@Model.Id?</h3>
+    <p><strong>@Model.Title</strong></p>
+    <p>@Model.Description</p>
+    <form asp-action="Delete" asp-route-id="@Model.Id" method="post">
+        @Html.AntiForgeryToken()
+        <div class="actions">
+            <a class="btn" asp-action="Index">Cancel</a>
+            <button class="btn warn" type="submit">Confirm Delete</button>
+        </div>
+    </form>
+</div>

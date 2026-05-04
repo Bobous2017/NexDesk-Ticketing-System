@@ -1,0 +1,86 @@
+services:
+
+  # ---- SQL Server Database Container ----
+  # This is the MSSQL database that replaces your local SQL Server (BOBHOME)
+  # All 3 apps (API, Web, Webform) share this one database
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest  # Official Microsoft SQL Server image
+    container_name: nexdesk-sqlserver                   # Name other containers use to reach it
+    environment:
+      SA_PASSWORD: "NexDesk2025!"                       # SA (admin) password for SQL Server
+      ACCEPT_EULA: "Y"                                  # Required by Microsoft to accept license
+    ports:
+      - "1433:1433"                                     # Exposes SQL Server port to your PC (for SSMS)
+    volumes:
+      - sqlserver_data:/var/opt/mssql                   # Saves DB data permanently (survives restarts)
+
+  # ---- API Container (NexDesk.API) ----
+  # This is your backend — handles all business logic, JWT auth, and DB access
+  nexdesk-api:
+    build:
+      context: .                                        # Build from solution root folder
+      dockerfile: Dockerfile.api                        # Use this specific Dockerfile
+    container_name: nexdesk-api                         # Name Web and Webform use to reach the API
+    depends_on:
+      - sqlserver                                       # Wait for SQL Server to start first
+    environment:
+      # --- Database ---
+      - DatabaseProvider=SqlServer                      # Use SQL Server (not SQLite)
+      - ConnectionStrings__SqlServer=Server=nexdesk-sqlserver;Database=NexDeskDB;User Id=sa;Password=NexDesk2025!;TrustServerCertificate=True;
+      # "nexdesk-sqlserver" = container name above, replaces your old "localhost\BOBHOME"
+
+      # --- JWT Auth ---
+      - Jwt__Key=N7h3!9qQwXz@pL0rT8uYcB#eF2sVdG5mK1jR4aH6zP
+      - Jwt__Issuer=NexDeskAPI
+      - Jwt__Audience=NexDeskWeb
+
+      # --- CORS (who is allowed to call the API) ---
+      - Api__BaseUrl=http://nexdesk-api:5093            # The API's own address inside Docker
+      - Api__FrontendUrls__0=http://nexdesk-web:5292    # Allow Web to call API
+      - Api__FrontendUrls__1=http://nexdesk-webform:5171 # Allow Webform to call API
+    ports:
+      - "5093:5093"                                     # Exposes API to your PC on port 5093
+
+  # ---- Web Container (NexDesk.Web) ----
+  # This is your admin dashboard (MVC Razor)
+  nexdesk-web:
+    build:
+      context: .                                        # Build from solution root folder
+      dockerfile: Dockerfile.web                        # Use this specific Dockerfile
+    container_name: nexdesk-web
+    depends_on:
+      - nexdesk-api                                     # Wait for API to start first
+    environment:
+      - Api__BaseUrl=http://nexdesk-api:5093            # Points to API container (not 192.168.0.12)
+      - DataProtection__KeysPath=/app/dataprotection/adminweb
+      # Replaces your old Windows path C:\ProgramData\NexDesk\... with a Linux path
+    ports:
+      - "5292:5292"                                     # Exposes Web to your PC on port 5292
+    volumes:
+      - dataprotection_web:/app/dataprotection/adminweb # Saves auth keys permanently
+
+  # ---- Webform Container (NexDesk.Webform) ----
+  # This is your user-facing ticket form
+  nexdesk-webform:
+    build:
+      context: .                                        # Build from solution root folder
+      dockerfile: Dockerfile.webform                    # Use this specific Dockerfile
+    container_name: nexdesk-webform
+    depends_on:
+      - nexdesk-api                                     # Wait for API to start first
+    environment:
+      - Api__BaseUrl=http://nexdesk-api:5093            # Points to API container (not 192.168.0.12)
+      - DataProtection__KeysPath=/app/dataprotection/webform
+      # Replaces your old Windows path C:\ProgramData\NexDesk\... with a Linux path
+    ports:
+      - "5171:5171"                                     # Exposes Webform to your PC on port 5171
+    volumes:
+      - dataprotection_webform:/app/dataprotection/webform # Saves auth keys permanently
+
+# ---- Named Volumes ----
+# These are permanent storage areas managed by Docker
+# Data survives even if containers are stopped or deleted
+volumes:
+  sqlserver_data:        # Stores the entire NexDeskDB database
+  dataprotection_web:    # Stores Web auth/cookie encryption keys
+  dataprotection_webform: # Stores Webform auth/cookie encryption keys

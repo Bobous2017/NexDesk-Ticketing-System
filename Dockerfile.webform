@@ -1,0 +1,25 @@
+# ---- Build Stage ----
+FROM mcr.microsoft.com/dotnet/sdk:8.0 AS build
+WORKDIR /src
+
+# Copy project files first (for layer caching)
+COPY NexDesk.Domain/NexDesk.Domain.csproj NexDesk.Domain/
+COPY NexDesk.Webform/NexDesk.Webform.csproj NexDesk.Webform/
+
+# Restore dependencies
+RUN dotnet restore NexDesk.Webform/NexDesk.Webform.csproj
+
+# Copy all source code
+COPY NexDesk.Domain/ NexDesk.Domain/
+COPY NexDesk.Webform/ NexDesk.Webform/
+
+# Publish release build
+RUN dotnet publish NexDesk.Webform/NexDesk.Webform.csproj -c Release -o /app/publish
+
+# ---- Runtime Stage ----
+FROM mcr.microsoft.com/dotnet/aspnet:8.0 AS final
+WORKDIR /app
+COPY --from=build /app/publish .
+
+EXPOSE 5171
+ENTRYPOINT ["dotnet", "NexDesk.Webform.dll"]

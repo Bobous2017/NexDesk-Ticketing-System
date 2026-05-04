@@ -6,5 +6,5 @@
   <Project Path="NexDesk.Webform/NexDesk.Webform.csproj" Id="c072e94e-6ff1-49e3-9290-fc17c8ed437b">
     <Build Solution="Debug|*" Project="false" />
   </Project>
-  <Project Path="NexDesk/NexDesk.Web.csproj" />
+  <Project Path="NexDesk.Web/NexDesk.Web.csproj" />
 </Solution>
