@@ -233,4 +233,10 @@ if (builder.Configuration["DatabaseProvider"] == "SQLite")
     SeedData.Seed(db);
 }
 
+// Auto-migrate database on startup
+using (var scope = app.Services.CreateScope())
+{
+    var db = scope.ServiceProvider.GetRequiredService<NexDeskDbContext>();
+    db.Database.Migrate();
+}
 app.Run();
